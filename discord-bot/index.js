@@ -3,8 +3,13 @@ require('dotenv').config(); // Load environment variables from .env file
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
+const express = require('express');
+const cors = require('cors');
+const scoreHandler = require('./api/scoreHandler');
+
 // Use environment variables instead of importing from config.json
 const token = process.env.DISCORD_BOT_TOKEN;
+const PORT = process.env.PORT || 3000;
 
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -23,6 +28,22 @@ for (const file of commandFiles) {
 		console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
 	}
 }
+
+// Set up Express server for API endpoints
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use('/api', scoreHandler);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+	res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Start the API server
+app.listen(PORT, () => {
+	console.log(`API server running on port ${PORT}`);
+});
 
 
 // When the client is ready, run this code (only once)
